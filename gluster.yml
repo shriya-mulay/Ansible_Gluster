@@ -28,19 +28,19 @@
     lvg:
       pvs: /dev/sdb
       vg: vg1
-  - name: Create a logical volume of 512m
+  - name: Create a logical volume
     lvol:
       vg: vg1
       thinpool: pool 
       size: 5g
-  - name: Create a logical volume of 512m
+  - name: Create a logical volume 
     lvol:
       vg: vg1
       lv: lv1
       thinpool: pool
       size: 1g
 
-  - name: Create a logical volume of 512m
+  - name: Create a logical volume 
     lvol:
       vg: vg1
       lv: lv2
