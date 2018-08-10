@@ -1,0 +1,165 @@
+---
+- hosts: dev
+  tasks:
+  - yum:
+        name: redhat-storage-server
+        state: latest
+  - name: "firewalld"
+    service:
+          name: firewalld
+          state: restarted
+          enabled: yes 
+  - name: Restart service
+    service:
+      name: glusterd
+      state: restarted
+      enabled: yes
+  - firewalld:
+      service: glusterfs
+      permanent: true
+      state: enabled
+  - firewalld:
+      port: 5667/tcp
+      permanent: true
+      state: enabled
+  - name: Reload firewalld
+    command: "firewall-cmd --reload"
+  - name: Create a PV disk 
+    lvg:
+      pvs: /dev/sdb
+      vg: vg1
+  - name: Create a logical volume of 512m
+    lvol:
+      vg: vg1
+      thinpool: pool 
+      size: 5g
+  - name: Create a logical volume of 512m
+    lvol:
+      vg: vg1
+      lv: lv1
+      thinpool: pool
+      size: 1g
+
+  - name: Create a logical volume of 512m
+    lvol:
+      vg: vg1
+      lv: lv2
+      thinpool: pool
+      size: 1g
+  
+  - name: Create a logical volume of 512m
+    lvol:
+      vg: vg1
+      lv: lv3
+      thinpool: pool
+      size: 1g
+
+  - name: Create a exf filesystem on lv1
+    filesystem:
+        fstype: xfs
+        dev: /dev/vg1/lv1
+  - name: Create a exf filesystem on lv1
+    filesystem:
+        fstype: xfs
+        dev: /dev/vg1/lv2
+  - name: Create a exf filesystem on lv1
+    filesystem:
+        fstype: xfs
+        dev: /dev/vg1/lv3
+
+  - name: mount 
+    mount:
+      path: /mnt/brick
+      src: /dev/vg1/lv1
+      fstype: xfs
+      state: mounted
+      backup: no
+      boot: yes
+
+  - name: Create dir inside mnt point
+    file:
+      path: /mnt/bric1/brick1
+      state: directory
+      mode: 0775
+
+  
+  - name: Create dir inside mnt point
+    file:
+      path: /mnt/brick2/brick1
+      state: directory
+      mode: 0775
+
+  - name: Create dir inside mnt point
+    file:
+      path: /mnt/brick3/brick1
+      state: directory
+      mode: 0775
+
+
+
+
+  - name: mount 
+    mount:
+      path: /mnt/brick1
+      src: /dev/vg1/lv1
+      fstype: xfs
+      state: mounted
+      backup: no
+      boot: yes
+
+
+
+  - name: mount 
+    mount:
+      path: /mnt/brick2
+      src: /dev/vg1/lv2
+      fstype: xfs
+      state: mounted
+      backup: no
+      boot: yes
+
+
+
+  - name: mount 
+    mount:
+      path: /mnt/brick3
+      src: /dev/vg1/lv3
+      fstype: xfs
+      state: mounted
+      backup: no
+      boot: yes
+
+
+  - name: Create a trusted storage pool  
+    gluster_peer:
+       state: present
+       nodes:
+         - 192.168.122.81
+  
+  - name: Create volume
+    gluster_volume:
+        state: present
+        name: Vol1
+        bricks: /mnt/brick1/brick1,/mnt/brick2/brick1,/mnt/brick3/brick1
+        replicas: 0
+        cluster:
+          - 192.168.122.81
+    run_once: true
+  - name: start gluster volume
+    gluster_volume:
+      state: started
+      name: Vol1
+  - name: Create dir inside mnt point
+    file:
+      path: /gluster_vol
+      state: directory
+      mode: 0775
+  - name: Mounting Vol
+    mount:
+      src: 192.168.122.81:/Vol1
+      path: /gluster_vol
+      fstype: glusterfs
+      opts: _netdev
+      state: mounted
+      backup: no
+      boot: yes
