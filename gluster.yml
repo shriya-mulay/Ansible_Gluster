@@ -47,7 +47,7 @@
       thinpool: pool
       size: 1g
   
-  - name: Create a logical volume of 512m
+  - name: Create a logical volume 
     lvol:
       vg: vg1
       lv: lv3
